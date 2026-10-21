@@ -1,0 +1,1994 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shift Hours Calculator</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+  <style>
+    :root{
+      --vd-primary:#007bff;
+      --vd-secondary:#ced4da;
+      --vd-surface:#f0f4f8;
+      --vd-text:#1a324e;
+      --vd-space:24px;
+      --vd-radius:12px;
+      --vd-heading:48px;
+      --vd-lh:1.5;
+
+      --vd-bg:var(--vd-surface);
+      --vd-card:#ffffff;
+      --vd-ink:var(--vd-text);
+      --vd-muted:#5b6b7c;
+      --vd-line:rgba(26,50,78,0.10);
+      --vd-line-strong:rgba(26,50,78,0.18);
+      --vd-accent:var(--vd-primary);
+      --vd-accent-soft:rgba(0,123,255,0.10);
+      --vd-support:var(--vd-secondary);
+      --vd-stripe:rgba(26,50,78,0.03);
+      --vd-shadow:0 1px 2px rgba(26,50,78,0.06);
+      --vd-font:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --vd-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    }
+
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    body{
+      background:var(--vd-bg);
+      color:var(--vd-ink);
+      font-family:var(--vd-font);
+      font-size:16px;
+      line-height:var(--vd-lh);
+      -webkit-font-smoothing:antialiased;
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns:260px minmax(0,1fr);
+      min-height:100vh;
+    }
+
+    /* ---------- Sidebar rail ---------- */
+    .rail{
+      background:var(--vd-bg);
+      border-right:1px solid var(--vd-line);
+      padding:32px 24px;
+      display:flex;
+      flex-direction:column;
+      gap:32px;
+      position:sticky;
+      top:0;
+      align-self:start;
+      height:100vh;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .brand-mark{
+      width:28px;height:28px;flex:none;
+      border-radius:7px;
+      background:var(--vd-ink);
+      display:grid;place-items:center;
+    }
+    .brand-mark svg{display:block;}
+    .brand-name{
+      font-size:15px;
+      font-weight:600;
+      letter-spacing:-0.01em;
+    }
+    .rail-label{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--vd-muted);
+      margin-bottom:12px;
+    }
+    .rail-nav{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .rail-nav a{
+      display:block;
+      padding:8px 10px;
+      border-radius:8px;
+      color:var(--vd-muted);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:500;
+      transition:background-color 180ms ease, color 180ms ease;
+    }
+    .rail-nav a:hover{background:rgba(26,50,78,0.05);color:var(--vd-ink);}
+    .rail-nav a:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px;}
+    .rail-nav a.active{color:var(--vd-ink);background:var(--vd-accent-soft);}
+
+    /* ---------- URL explanation panel ---------- */
+    .url-note{
+      background:var(--vd-card);
+      border:1px solid var(--vd-line);
+      border-left:3px solid var(--vd-accent);
+      border-radius:var(--vd-radius);
+      padding:20px 22px;
+      box-shadow:var(--vd-shadow);
+      margin:0 0 24px;
+      display:none;
+    }
+    .url-note.show{display:block;}
+    .url-note h3{
+      font-size:15px;
+      font-weight:600;
+      letter-spacing:-0.01em;
+      margin:0 0 10px;
+    }
+    .url-note p{
+      margin:0 0 10px;
+      font-size:14px;
+      color:var(--vd-muted);
+      max-width:68ch;
+    }
+    .url-note p:last-of-type{margin-bottom:0;}
+    .url-note code{
+      font-family:var(--vd-mono);
+      font-size:12px;
+      background:var(--vd-stripe);
+      border:1px solid var(--vd-line);
+      border-radius:4px;
+      padding:1px 5px;
+      word-break:break-all;
+    }
+    .url-note .note-actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;}
+    .url-note .note-actions .btn{min-height:38px;padding:8px 16px;font-size:14px;}
+
+    /* ---------- Troubleshooting panel ---------- */
+    .trouble{
+      background:var(--vd-card);
+      border:1px solid var(--vd-line);
+      border-radius:var(--vd-radius);
+      padding:var(--vd-space);
+      box-shadow:var(--vd-shadow);
+      margin:0 0 40px;
+    }
+    .trouble h2{
+      font-size:18px;
+      font-weight:600;
+      letter-spacing:-0.01em;
+      margin:0 0 6px;
+    }
+    .trouble > p{
+      margin:0 0 18px;
+      font-size:14px;
+      color:var(--vd-muted);
+      max-width:68ch;
+    }
+    .trouble-list{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      gap:1px;
+      background:var(--vd-line);
+      border:1px solid var(--vd-line);
+      border-radius:var(--vd-radius);
+      overflow:hidden;
+    }
+    .trouble-list li{
+      background:var(--vd-card);
+      padding:14px 16px;
+      font-size:14px;
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr);
+      gap:12px;
+      align-items:start;
+    }
+    .trouble-list .tick{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:var(--vd-muted);
+      border:1px solid var(--vd-line-strong);
+      border-radius:99px;
+      padding:2px 8px;
+      white-space:nowrap;
+      margin-top:1px;
+    }
+    .trouble-list li.flag .tick{
+      color:#a02020;
+      border-color:rgba(190,40,40,0.35);
+      background:rgba(190,40,40,0.06);
+    }
+    .trouble-list strong{font-weight:600;}
+    .trouble-list code{
+      font-family:var(--vd-mono);
+      font-size:12px;
+      background:var(--vd-stripe);
+      border:1px solid var(--vd-line);
+      border-radius:4px;
+      padding:1px 5px;
+      word-break:break-all;
+    }
+    .diag{
+      margin-top:20px;
+      border-top:1px solid var(--vd-line);
+      padding-top:16px;
+    }
+    .diag-label{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--vd-muted);
+      margin-bottom:10px;
+    }
+    .diag-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+      gap:1px;
+      background:var(--vd-line);
+      border:1px solid var(--vd-line);
+      border-radius:var(--vd-radius);
+      overflow:hidden;
+    }
+    .diag-cell{
+      background:var(--vd-card);
+      padding:12px 14px;
+    }
+    .diag-cell .k{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:var(--vd-muted);
+      margin-bottom:6px;
+    }
+    .diag-cell .v{
+      font-family:var(--vd-mono);
+      font-size:18px;
+      font-weight:500;
+      letter-spacing:-0.01em;
+    }
+    .diag-cell .v.warn{color:#a02020;}
+    .diag-note{
+      font-size:13px;
+      color:var(--vd-muted);
+      margin:12px 0 0;
+      line-height:1.6;
+    }
+
+    .rail-meta{
+      margin-top:auto;
+      font-family:var(--vd-mono);
+      font-size:11px;
+      color:var(--vd-muted);
+      line-height:1.7;
+    }
+    .rail-meta span{display:block;}
+
+    /* ---------- Main column ---------- */
+    main{
+      padding:48px 56px 96px;
+      max-width:1080px;
+      width:100%;
+    }
+    .eyebrow{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--vd-muted);
+      margin:0 0 12px;
+    }
+    h1{
+      font-size:clamp(28px, 4vw, var(--vd-heading));
+      font-weight:600;
+      letter-spacing:-0.01em;
+      line-height:1.12;
+      margin:0 0 12px;
+    }
+    .lede{
+      margin:0 0 40px;
+      color:var(--vd-muted);
+      max-width:58ch;
+      font-size:16px;
+    }
+
+    /* ---------- Controls ---------- */
+    .controls{
+      background:var(--vd-card);
+      border:1px solid var(--vd-line);
+      border-radius:var(--vd-radius);
+      padding:var(--vd-space);
+      box-shadow:var(--vd-shadow);
+      margin-bottom:40px;
+    }
+    .field-grid{
+      display:grid;
+      grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;
+      gap:16px;
+      align-items:end;
+    }
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+    .field label{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--vd-muted);
+    }
+    input[type="url"],input[type="month"],select{
+      font-family:var(--vd-font);
+      font-size:15px;
+      color:var(--vd-ink);
+      background:#fff;
+      border:1px solid var(--vd-line-strong);
+      border-radius:8px;
+      padding:11px 12px;
+      min-height:44px;
+      width:100%;
+      transition:border-color 180ms ease, box-shadow 180ms ease;
+    }
+    input[type="url"]:focus,input[type="month"]:focus,select:focus{
+      outline:none;
+      border-color:var(--vd-accent);
+      box-shadow:0 0 0 3px var(--vd-accent-soft);
+    }
+    .btn{
+      font-family:var(--vd-font);
+      font-size:15px;
+      font-weight:500;
+      border-radius:8px;
+      padding:11px 20px;
+      min-height:44px;
+      cursor:pointer;
+      transition:background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .btn-primary{
+      background:var(--vd-accent);
+      color:#fff;
+    }
+    .btn-primary:hover{background:#0069d9;}
+    .btn-primary:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px;}
+    .btn-ghost{
+      background:transparent;
+      color:var(--vd-ink);
+      border-color:var(--vd-line-strong);
+    }
+    .btn-ghost:hover{background:rgba(26,50,78,0.05);}
+    .btn-ghost:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px;}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+
+    .hint{
+      font-size:13px;
+      color:var(--vd-muted);
+      margin:14px 0 0;
+      line-height:1.6;
+    }
+    .hint code{
+      font-family:var(--vd-mono);
+      font-size:12px;
+      background:var(--vd-stripe);
+      border:1px solid var(--vd-line);
+      border-radius:4px;
+      padding:1px 5px;
+    }
+
+    /* ---------- Results ---------- */
+    .results-head{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:16px;
+      border-bottom:1px solid var(--vd-line);
+      padding-bottom:12px;
+      margin-bottom:24px;
+      flex-wrap:wrap;
+    }
+    .results-head h2{
+      font-size:20px;
+      font-weight:600;
+      letter-spacing:-0.01em;
+      margin:0;
+    }
+    .period-tag{
+      font-family:var(--vd-mono);
+      font-size:12px;
+      color:var(--vd-muted);
+    }
+
+    .stat-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:1px;
+      background:var(--vd-line);
+      border:1px solid var(--vd-line);
+      border-radius:var(--vd-radius);
+      overflow:hidden;
+      margin-bottom:32px;
+    }
+    .stat{
+      background:var(--vd-card);
+      padding:22px 20px;
+    }
+    .stat-label{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--vd-muted);
+      margin-bottom:10px;
+    }
+    .stat-value{
+      font-family:var(--vd-mono);
+      font-size:30px;
+      font-weight:500;
+      letter-spacing:-0.02em;
+      line-height:1.1;
+      color:var(--vd-ink);
+    }
+    .stat-value .unit{
+      font-size:14px;
+      color:var(--vd-muted);
+      margin-left:4px;
+      letter-spacing:0;
+    }
+    .stat-sub{
+      font-size:13px;
+      color:var(--vd-muted);
+      margin-top:6px;
+    }
+
+    /* ---------- Table ---------- */
+    .table-wrap{
+      border:1px solid var(--vd-line);
+      border-radius:var(--vd-radius);
+      overflow:hidden;
+      background:var(--vd-card);
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    thead th{
+      font-family:var(--vd-mono);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:var(--vd-muted);
+      font-weight:500;
+      text-align:left;
+      padding:12px 16px;
+      border-bottom:1px solid var(--vd-line);
+      background:var(--vd-card);
+      white-space:nowrap;
+    }
+    tbody td{
+      padding:12px 16px;
+      border-bottom:1px solid var(--vd-line);
+      vertical-align:top;
+    }
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:nth-child(even){background:var(--vd-stripe);}
+    td.num,th.num{
+      font-family:var(--vd-mono);
+      text-align:right;
+      white-space:nowrap;
+    }
+    .shift-title{font-weight:500;}
+    .shift-note{color:var(--vd-muted);font-size:13px;display:block;margin-top:2px;}
+    .row-remove{
+      font-family:var(--vd-font);
+      font-size:12px;
+      font-weight:500;
+      color:var(--vd-muted);
+      background:transparent;
+      border:1px solid var(--vd-line-strong);
+      border-radius:6px;
+      padding:4px 10px;
+      cursor:pointer;
+      white-space:nowrap;
+      transition:background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+    .row-remove:hover{background:rgba(190,40,40,0.06);color:#a02020;border-color:rgba(190,40,40,0.3);}
+    .row-remove:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px;}
+    tbody tr.removed td{opacity:0.45;}
+    tbody tr.removed .shift-title{text-decoration:line-through;}
+    .row-restore{
+      font-family:var(--vd-font);
+      font-size:12px;
+      font-weight:500;
+      color:var(--vd-accent);
+      background:transparent;
+      border:1px solid var(--vd-line-strong);
+      border-radius:6px;
+      padding:4px 10px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .row-restore:hover{background:var(--vd-accent-soft);}
+    .row-restore:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px;}
+    .row-actions{display:flex;flex-wrap:wrap;gap:0;align-items:center;}
+    .cell-edit{
+      font-family:var(--vd-mono);
+      font-size:14px;
+      color:var(--vd-ink);
+      background:transparent;
+      border:1px solid transparent;
+      border-radius:6px;
+      padding:3px 7px;
+      margin:-3px -7px;
+      cursor:text;
+      white-space:nowrap;
+      transition:background-color 180ms ease, border-color 180ms ease;
+    }
+    .cell-edit:hover{background:rgba(26,50,78,0.05);border-color:var(--vd-line-strong);}
+    .cell-edit:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px;}
+    .cell-edit.editing{
+      background:#fff;
+      border-color:var(--vd-accent);
+      box-shadow:0 0 0 3px var(--vd-accent-soft);
+      outline:none;
+      cursor:text;
+    }
+    .cell-edit.invalid{
+      border-color:rgba(190,40,40,0.6);
+      box-shadow:0 0 0 3px rgba(190,40,40,0.12);
+    }
+    .cell-hint{
+      display:block;
+      font-family:var(--vd-font);
+      font-size:11px;
+      color:var(--vd-muted);
+      margin-top:3px;
+      white-space:nowrap;
+    }
+    .cell-hint.error{color:#a02020;}
+    .edit-error{
+      font-size:13px;
+      color:#a02020;
+      margin:0;
+      display:none;
+    }
+    .edit-error.show{display:block;}
+    .edited-tag{
+      font-family:var(--vd-mono);
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:var(--vd-accent);
+      border:1px solid var(--vd-line-strong);
+      border-radius:99px;
+      padding:1px 7px;
+      margin-left:6px;
+      white-space:nowrap;
+    }
+    .excluded-note{
+      font-size:13px;
+      color:var(--vd-muted);
+      margin:12px 0 0;
+      display:none;
+    }
+    .excluded-note.show{display:block;}
+    .excluded-note button{
+      font-family:var(--vd-font);
+      font-size:13px;
+      font-weight:500;
+      color:var(--vd-accent);
+      background:none;
+      border:none;
+      padding:0;
+      cursor:pointer;
+      text-decoration:underline;
+    }
+=======
+
+    .empty{
+      padding:40px 24px;
+      text-align:center;
+      color:var(--vd-muted);
+      font-size:14px;
+    }
+
+    .status{
+      font-size:13px;
+      padding:12px 16px;
+      border-radius:8px;
+      margin-bottom:16px;
+      border:1px solid var(--vd-line);
+      background:var(--vd-card);
+      color:var(--vd-muted);
+      display:none;
+    }
+    .status.show{display:block;}
+    .status.error{border-color:rgba(190,40,40,0.3);color:#a02020;background:rgba(190,40,40,0.05);}
+
+    .weeks{
+      margin-top:32px;
+    }
+    .weeks h3{
+      font-size:14px;
+      font-weight:600;
+      margin:0 0 12px;
+      letter-spacing:-0.01em;
+    }
+    .week-bars{display:flex;flex-direction:column;gap:10px;}
+    .week-row{
+      display:grid;
+      grid-template-columns:130px minmax(0,1fr) 72px;
+      align-items:center;
+      gap:14px;
+      font-size:13px;
+    }
+    .week-row .wk-label{font-family:var(--vd-mono);color:var(--vd-muted);font-size:12px;}
+    .bar-track{
+      height:8px;
+      background:var(--vd-stripe);
+      border-radius:99px;
+      overflow:hidden;
+      border:1px solid var(--vd-line);
+    }
+    .bar-fill{
+      height:100%;
+      background:var(--vd-accent);
+      border-radius:99px;
+      transition:width 220ms ease;
+    }
+    .week-row .wk-val{font-family:var(--vd-mono);text-align:right;}
+
+    footer{
+      margin-top:64px;
+      padding-top:20px;
+      border-top:1px solid var(--vd-line);
+      font-size:13px;
+      color:var(--vd-muted);
+      max-width:70ch;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr;}
+      .rail{
+        position:static;
+        height:auto;
+        border-right:none;
+        border-bottom:1px solid var(--vd-line);
+        padding:16px 20px;
+        flex-direction:row;
+        align-items:center;
+        gap:16px;
+        flex-wrap:wrap;
+      }
+      .rail-nav{flex-direction:row;flex-wrap:wrap;}
+      .rail-label{display:none;}
+      .rail-meta{display:none;}
+      main{padding:32px 20px 72px;}
+      .field-grid{grid-template-columns:1fr;}
+      .stat-grid{grid-template-columns:1fr;}
+      .week-row{grid-template-columns:96px minmax(0,1fr) 64px;gap:10px;}
+    }
+    @media (max-width:420px){
+      .btn{width:100%;}
+      .btn-row .btn{width:100%;}
+      .stat-value{font-size:26px;}
+    }
+  
+.ics-paste{font-family:var(--vd-mono);font-size:13px;color:var(--vd-ink);background:#fff;border:1px solid var(--vd-line-strong);border-radius:8px;padding:11px 12px;width:100%;transition:border-color 180ms ease, box-shadow 180ms ease;resize:vertical;min-height:80px;}.ics-paste:focus{outline:none;border-color:var(--vd-accent);box-shadow:0 0 0 3px var(--vd-accent-soft);}
+.trouble-collapsible { margin-bottom: 40px; background: var(--vd-card); border: 1px solid var(--vd-line); border-radius: var(--vd-radius); box-shadow: var(--vd-shadow); overflow: hidden; }
+.trouble-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: var(--vd-space); background: none; border: none; cursor: pointer; font-family: var(--vd-font); color: var(--vd-ink); text-align: left; }
+.trouble-toggle h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.trouble-toggle svg { transition: transform 250ms ease; }
+.trouble-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.trouble-content { padding: 0 var(--vd-space) var(--vd-space); display: none; }
+.trouble-toggle[aria-expanded="true"] + .trouble-content { display: block; }
+.trouble-toggle:focus-visible { outline: 2px solid var(--vd-accent); outline-offset: -2px; border-radius: var(--vd-radius); }
+.trouble-collapsible{margin-top:64px;}
+.time-plus-one{font-size:0.7em;vertical-align:super;color:#a02020;margin-left:2px;line-height:0;font-weight:600;}</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar rail -->
+  <aside class="rail">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6.2" stroke="#f0f4f8" stroke-width="1.6"></circle>
+          <path d="M8 4.6V8l2.4 1.6" stroke="#f0f4f8" stroke-width="1.6" stroke-linecap="round"></path>
+        </svg>
+      </span>
+      <span class="brand-name">Shift Hours</span>
+    </div>
+
+    <nav class="rail-nav" aria-label="Sections">
+      <a href="#input" class="active" id="navInput">Input</a>
+      <a href="#summary">Summary</a>
+      <a href="#shifts">Shifts</a>
+      <a href="#weekly">Weekly</a>
+    </nav>
+
+    <div class="rail-meta">
+      <span>Vcal → hours</span>
+      <span>v1.0 · offline</span>
+    </div>
+  </aside>
+
+  <!-- Main column -->
+  <main>
+    <section id="input">
+      <p class="eyebrow">Work hours calculator</p>
+      <h1>Total the shifts in your Vcal feed.</h1>
+      <p class="lede">
+        Paste an iCalendar (.ics) URL and pick a month. The calculator reads the
+        scheduled shifts, sums their durations, and reports the monthly total
+        plus the average hours per week.
+      </p>
+
+      <div class="url-note" id="urlNote" role="note">
+        <h3>Why the remote Vcal URL can’t be read</h3>
+        <p>
+          This page is a single static file. When it is published it is served as
+          plain HTML, and the browser blocks it from making a request to another
+          site — so it cannot open
+          <code id="urlNoteUrl">https://www.amion.com/cgi-bin/ocs?Vcal=7.2179&amp;Lo=mghpeds&amp;Jd=10880</code>
+          and download the calendar itself.
+        </p>
+        <p>
+          That is a limit of the page, not a problem with your link. Nothing was
+          sent anywhere and no data was lost.
+        </p>
+        <p>
+          <strong>What to do instead:</strong> open the Vcal URL in a new tab, save
+          the file it returns (it ends in <code>.ics</code>), open it in a text
+          editor, and paste the whole contents — starting with
+          <code>BEGIN:VCALENDAR</code> — into the paste box below. The calculator
+          then totals the shifts exactly as it would have from the URL.
+        </p>
+        <div class="note-actions">
+          <button type="button" class="btn btn-ghost" id="urlNoteOpen">Open the Vcal URL in a new tab</button>
+          <button type="button" class="btn btn-ghost" id="urlNoteClose">Got it</button>
+        </div>
+      </div>
+
+      <form class="controls" id="calcForm" novalidate="">
+        <div class="field-grid"><div class="field"><label>URL</label><input type="url" placeholder="https://example.com/calendar.ics"></div><div class="field"><label>Or paste .ics content</label><textarea class="ics-paste" placeholder="BEGIN:VCALENDAR..." rows="6"></textarea></div><div class="field"><label>Month</label><input type="month"></div><div class="field"><button class="btn btn-primary" type="submit">Calculate hours</button></div></div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="demoBtn">Load sample shift data</button>
+          <button type="button" class="btn btn-ghost" id="clearBtn">Clear</button>
+        </div>
+
+        <p class="hint">
+          The feed is parsed in your browser — nothing is uploaded. Use
+          <code>https://example.com/rota.ics</code> or press
+          <strong>Load sample shift data</strong> to see a worked example.
+        </p>
+      </form>
+
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </section>
+
+    
+
+    <section id="summary">
+      <div class="results-head">
+        <h2>Summary</h2>
+        <span class="period-tag" id="periodTag">—</span>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-label">Total hours</div>
+          <div class="stat-value" id="totalHours">0.0<span class="unit">h</span></div>
+          <div class="stat-sub" id="shiftCount">0 shifts</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Avg / week</div>
+          <div class="stat-value" id="avgHours">0.0<span class="unit">h</span></div>
+          <div class="stat-sub" id="weekCount">0 weeks</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Longest shift</div>
+          <div class="stat-value" id="longestShift">0.0<span class="unit">h</span></div>
+          <div class="stat-sub" id="longestDate">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="shifts">
+      <div class="results-head">
+        <h2>Scheduled shifts</h2>
+        <span class="period-tag" id="tableCount">0 entries</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Shift</th>
+              <th scope="col">Start</th>
+              <th scope="col">End</th>
+              <th scope="col" class="num">Hours</th>
+              <th scope="col">Count</th>
+            </tr>
+          </thead>
+          <tbody id="shiftBody">
+            <tr><td colspan="6" class="empty">No shifts loaded yet. Enter a Vcal URL and press Calculate hours.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="excluded-note" id="excludedNote"></p>
+    </section>
+
+    <section class="weeks" id="weekly">
+      <h3>Hours by week</h3>
+      <div class="week-bars" id="weekBars">
+        <p class="hint" style="margin:0;">Weekly breakdown appears after a calculation.</p>
+      </div>
+    </section>
+
+    <section class="trouble-collapsible">
+          <button class="trouble-toggle" type="button" aria-expanded="false">
+            <h2>Troubleshooting</h2>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="trouble-content">
+            <p>The parser reads every <code>VEVENT</code> in the feed and keeps the ones whose <strong>start</strong> falls inside the month you picked. These are the usual reasons a shift you expected does not appear.</p>
+            <ul class="trouble-list">
+              <li>
+                <span class="tick">Month</span>
+                <span><strong>The shift is in a different month.</strong> Only events starting inside the selected month are counted, so a shift that begins on the last day of the previous month is left out. Change the month and calculate again.</span>
+              </li>
+              <li>
+                <span class="tick">No end</span>
+                <span><strong>The event has no usable <code>DTEND</code>.</strong> Without an end time there is no duration to add up, so the event is skipped. A <code>DURATION</code> property is not read either — add a <code>DTEND</code> to the event.</span>
+              </li>
+              <li>
+                <span class="tick">All-day</span>
+                <span><strong>It is an all-day or date-only event.</strong> A value like <code>DTSTART;VALUE=DATE:20250612</code> has no clock time, so it is ignored — it is never counted as a shift.</span>
+              </li>
+              <li>
+                <span class="tick">Time zone</span>
+                <span><strong>The times are in another time zone.</strong> A trailing <code>Z</code> (UTC) is converted to your local time zone, so a shift near midnight can land on the day before or after the one written in the file. A <code>TZID</code> is ignored and its clock time is read as your local time.</span>
+              </li>
+              <li>
+                <span class="tick">Folding</span>
+                <span><strong>The file was pasted with folded lines broken.</strong> Long lines in an .ics file continue on the next line after a space or tab. If that leading space is lost when copying, the property is unreadable and the event is skipped.</span>
+              </li>
+              <li>
+                <span class="tick">Cancelled</span>
+                <span><strong>The event is cancelled.</strong> <code>STATUS:CANCELLED</code> is not filtered, so a cancelled shift can still be counted.</span>
+              </li>
+              <li>
+                <span class="tick">Repeats</span>
+                <span><strong>It is a repeating shift.</strong> A single <code>VEVENT</code> with an <code>RRULE</code> is expanded into one shift per occurrence inside the selected month. Rules with <code>COUNT</code>, <code>UNTIL</code>, <code>INTERVAL</code>, <code>BYDAY</code> and <code>FREQ=DAILY/WEEKLY/MONTHLY</code> are supported; anything more exotic is counted once, on its start date.</span>
+              </li>
+            </ul>
+            <div class="diag">
+              <div class="diag-label">Last feed parsed</div>
+              <div class="diag-grid">
+                <div class="diag-cell">
+                  <div class="k">VEVENT blocks</div>
+                  <div class="v">0</div>
+                </div>
+                <div class="diag-cell">
+                  <div class="k">With start + end</div>
+                  <div class="v">0</div>
+                </div>
+                <div class="diag-cell">
+                  <div class="k">Skipped, no end</div>
+                  <div class="v">0</div>
+                </div>
+                <div class="diag-cell">
+                  <div class="k">Repeats expanded</div>
+                  <div class="v">0</div>
+                </div>
+                <div class="diag-cell">
+                  <div class="k">In selected month</div>
+                  <div class="v">0</div>
+                </div>
+                <div class="diag-cell">
+                  <div class="k">Outside month</div>
+                  <div class="v">0</div>
+                </div>
+              </div>
+              <p class="diag-note">Load a feed to see how many events were read and where the rest went.</p>
+            </div>
+          </div>
+        </section><footer>
+      This page runs entirely in your browser. The Vcal URL is read locally and
+      is not sent anywhere; the numbers reset when you close the tab. Created using renewable energy with <a href="ai.viro.app">Viro AI</a>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     State
+  ------------------------------------------------------------------ */
+  var state = {
+    shifts: [],        // { date: Date, title, start: Date, end: Date, hours: Number, excluded: Boolean, edited: Boolean }
+    month: '',         // 'YYYY-MM'
+    source: '',        // url or 'sample'
+    lastEvents: null,  // events from the most recent parse
+    lastStats: null,   // parser stats from the most recent parse
+    editing: null      // { index: Number, field: 'start'|'end'|'hours' } or null
+  };
+
+  /* ------------------------------------------------------------------
+     DOM refs
+  ------------------------------------------------------------------ */
+  var form        = document.getElementById('calcForm');
+  var urlInput    = form.querySelector('input[type="url"]');
+  var monthInput  = form.querySelector('input[type="month"]');
+  var pasteInput  = form.querySelector('.ics-paste');
+  var statusEl    = document.getElementById('status');
+  var demoBtn     = document.getElementById('demoBtn');
+  var clearBtn    = document.getElementById('clearBtn');
+  var urlNote     = document.getElementById('urlNote');
+  var urlNoteUrl  = document.getElementById('urlNoteUrl');
+  var urlNoteOpen = document.getElementById('urlNoteOpen');
+  var urlNoteClose= document.getElementById('urlNoteClose');
+
+  var totalHoursEl  = document.getElementById('totalHours');
+  var avgHoursEl    = document.getElementById('avgHours');
+  var longestEl     = document.getElementById('longestShift');
+  var shiftCountEl  = document.getElementById('shiftCount');
+  var weekCountEl   = document.getElementById('weekCount');
+  var longestDateEl = document.getElementById('longestDate');
+  var periodTag     = document.getElementById('periodTag');
+  var tableCount    = document.getElementById('tableCount');
+  var shiftBody     = document.getElementById('shiftBody');
+  var weekBars      = document.getElementById('weekBars');
+  var excludedNote  = document.getElementById('excludedNote');
+
+  var troublePanel  = document.querySelector('.trouble-collapsible');
+  var troubleList   = troublePanel ? troublePanel.querySelector('.trouble-list') : null;
+  var diagCells     = troublePanel ? troublePanel.querySelectorAll('.diag-cell .v') : [];
+  var diagEvents    = diagCells[0] || null;
+  var diagUsable    = diagCells[1] || null;
+  var diagNoEnd     = diagCells[2] || null;
+  var diagRecur     = diagCells[3] || null;
+  var diagInMonth   = diagCells[4] || null;
+  var diagOutMonth  = diagCells[5] || null;
+  var diagNote      = troublePanel ? troublePanel.querySelector('.diag-note') : null;
+
+  /* ------------------------------------------------------------------
+     Helpers
+  ------------------------------------------------------------------ */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  function fmtDate(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  function fmtTime(d) {
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // 'HH:MM' for an <input type="time"> value.
+  function timeValue(d) {
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // Build a Date on the shift's own day from an 'HH:MM' string.
+  function timeOnDay(day, hhmm) {
+    var m = String(hhmm).match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    var h = parseInt(m[1], 10);
+    var mi = parseInt(m[2], 10);
+    if (isNaN(h) || isNaN(mi) || h > 23 || mi > 59) return null;
+    return new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, mi, 0);
+  }
+
+  // Accepts '9', '9:30', '0930', '9.30' and returns 'HH:MM', or null.
+  function parseTimeText(text) {
+    var t = String(text).trim().replace(/[.,]/g, ':');
+    if (!t) return null;
+    var m = t.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+    if (!m) return null;
+    var h = parseInt(m[1], 10);
+    var mi = m[2] ? parseInt(m[2], 10) : 0;
+    if (isNaN(h) || isNaN(mi) || h > 23 || mi > 59) return null;
+    return pad(h) + ':' + pad(mi);
+  }
+
+  // Accepts '8', '7.5', '7,25' and returns a number of hours, or null.
+  function parseHoursText(text) {
+    var t = String(text).trim().replace(',', '.');
+    if (!t) return null;
+    var n = parseFloat(t);
+    if (isNaN(n)) return null;
+    return n;
+  }
+
+  function fmtMonthLabel(ym) {
+    if (!ym) return '—';
+    var parts = ym.split('-');
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var names = ['January','February','March','April','May','June',
+                 'July','August','September','October','November','December'];
+    if (isNaN(y) || isNaN(m) || m < 1 || m > 12) return ym;
+    return names[m - 1] + ' ' + y;
+  }
+
+  function round1(n) { return Math.round(n * 10) / 10; }
+
+  // 'YYYY-MM' for the month before the current one.
+  function lastMonthValue() {
+    var now = new Date();
+    var d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1);
+  }
+
+  function setStatus(msg, isError) {
+    if (!msg) {
+      statusEl.className = 'status';
+      statusEl.textContent = '';
+      return;
+    }
+    statusEl.className = 'status show' + (isError ? ' error' : '');
+    statusEl.textContent = msg;
+  }
+
+  /* ------------------------------------------------------------------
+     Minimal iCalendar parser
+     Handles: BEGIN:VEVENT ... END:VEVENT, DTSTART, DTEND, SUMMARY,
+     line folding, DATE and DATE-TIME values, TZID ignored (local time).
+  ------------------------------------------------------------------ */
+  function unfold(text) {
+    // RFC 5545 line folding: CRLF followed by space or tab
+    return text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '');
+  }
+
+  function parseIcsDate(value, isEnd) {
+    // value like 20250612T090000Z or 20250612T090000 or 20250612
+    var v = value.trim();
+    var m = v.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2}))?(Z)?$/);
+    if (!m) return null;
+
+    var y = parseInt(m[1], 10);
+    var mo = parseInt(m[2], 10) - 1;
+    var d = parseInt(m[3], 10);
+    var hh = m[4] ? parseInt(m[4], 10) : 0;
+    var mm = m[5] ? parseInt(m[5], 10) : 0;
+    var ss = m[6] ? parseInt(m[6], 10) : 0;
+
+    // Date-only DTEND is exclusive per spec; treat as end of that day.
+    if (!m[4] && isEnd) {
+      hh = 23; mm = 59; ss = 59;
+    }
+
+    // A trailing Z means the value is UTC. Build it as UTC and let the
+    // browser shift it to the visitor's own time zone.
+    if (m[7] && m[4]) {
+      var utc = new Date(Date.UTC(y, mo, d, hh, mm, ss));
+      if (isNaN(utc.getTime())) return null;
+      return utc;
+    }
+
+    var date = new Date(y, mo, d, hh, mm, ss);
+    if (isNaN(date.getTime())) return null;
+    return date;
+  }
+
+  function parseIcs(text) {
+    var lines = unfold(text).split(/\r?\n/);
+    var events = [];
+    var cur = null;
+    var inEvent = false;
+    var stats = { blocks: 0, noEnd: 0, allDay: 0, utc: 0, tzid: 0, cancelled: 0, recur: 0 };
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var upper = line.toUpperCase();
+
+      if (upper === 'BEGIN:VEVENT') {
+        inEvent = true;
+        stats.blocks++;
+        cur = { title: '', start: null, end: null, allDay: false, rrule: null };
+        continue;
+      }
+      if (upper === 'END:VEVENT') {
+        if (inEvent && cur) {
+          if (cur.allDay) {
+            // Date-only events have no clock time — ignore them entirely.
+            stats.allDay++;
+          } else if (cur.start && cur.end && cur.end > cur.start) {
+            if (cur.rrule) {
+              var expanded = expandRecurrence(cur, stats);
+              for (var x = 0; x < expanded.length; x++) events.push(expanded[x]);
+            } else {
+              events.push(cur);
+            }
+          } else if (cur.start) {
+            // No usable DTEND — skip, we need a duration.
+            stats.noEnd++;
+          }
+        }
+        inEvent = false;
+        cur = null;
+        continue;
+      }
+      if (!inEvent || !cur) continue;
+
+      var colon = line.indexOf(':');
+      if (colon === -1) continue;
+
+      var keyPart = line.slice(0, colon);
+      var val = line.slice(colon + 1);
+      var key = keyPart.split(';')[0].toUpperCase();
+
+      if (key === 'DTSTART') {
+        cur.start = parseIcsDate(val, false);
+        cur.allDay = !/T\d{4}/.test(val);
+        if (/Z\s*$/.test(val)) stats.utc++;
+        if (/TZID=/i.test(keyPart)) stats.tzid++;
+      } else if (key === 'DTEND') {
+        cur.end = parseIcsDate(val, true);
+      } else if (key === 'SUMMARY') {
+        cur.title = val.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/gi, ' ').trim();
+      } else if (key === 'RRULE') {
+        cur.rrule = val.trim();
+      } else if (key === 'STATUS' && /CANCELLED/i.test(val)) {
+        stats.cancelled++;
+      }
+    }
+
+    events.stats = stats;
+    return events;
+  }
+
+  /* ------------------------------------------------------------------
+     Recurrence (RRULE) expansion
+     Supports FREQ=DAILY / WEEKLY / MONTHLY with INTERVAL, COUNT, UNTIL
+     and BYDAY. Each occurrence keeps the original duration.
+  ------------------------------------------------------------------ */
+  function parseRRule(str) {
+    var out = {};
+    var parts = String(str).split(';');
+    for (var i = 0; i < parts.length; i++) {
+      var eq = parts[i].indexOf('=');
+      if (eq === -1) continue;
+      out[parts[i].slice(0, eq).toUpperCase()] = parts[i].slice(eq + 1);
+    }
+    return out;
+  }
+
+  var DAY_CODES = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
+
+  function addDays(d, n) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n,
+                    d.getHours(), d.getMinutes(), d.getSeconds());
+  }
+
+  function expandRecurrence(ev, stats) {
+    var rule = parseRRule(ev.rrule);
+    var freq = (rule.FREQ || '').toUpperCase();
+    var interval = parseInt(rule.INTERVAL, 10);
+    if (isNaN(interval) || interval < 1) interval = 1;
+    var count = parseInt(rule.COUNT, 10);
+    if (isNaN(count) || count < 1) count = null;
+    var until = rule.UNTIL ? parseIcsDate(rule.UNTIL, false) : null;
+
+    var duration = ev.end.getTime() - ev.start.getTime();
+    var out = [];
+
+    function push(startDate) {
+      if (until && startDate.getTime() > until.getTime()) return false;
+      out.push({
+        title: ev.title,
+        start: startDate,
+        end: new Date(startDate.getTime() + duration),
+        allDay: false,
+        rrule: null
+      });
+      return true;
+    }
+
+    var max = 400; // safety cap
+    var i;
+
+    if (freq === 'DAILY') {
+      var d = new Date(ev.start.getTime());
+      for (i = 0; i < max; i++) {
+        if (count !== null && out.length >= count) break;
+        if (!push(d)) break;
+        d = addDays(d, interval);
+      }
+    } else if (freq === 'WEEKLY') {
+      var byday = rule.BYDAY
+        ? rule.BYDAY.split(',').map(function (s) { return DAY_CODES[s.trim().toUpperCase()]; })
+            .filter(function (n) { return n !== undefined; })
+        : null;
+      if (!byday || byday.length === 0) byday = [(ev.start.getDay() + 6) % 7]; // Mon = 0
+
+      // Start at the Monday of the week containing DTSTART.
+      var weekStart = addDays(ev.start, -((ev.start.getDay() + 6) % 7));
+      var week = 0;
+      while (out.length < max && week < 520) {
+        for (var b = 0; b < byday.length; b++) {
+          var cand = addDays(weekStart, week * 7 * interval + byday[b]);
+          if (cand.getTime() < ev.start.getTime()) continue;
+          if (count !== null && out.length >= count) break;
+          if (!push(cand)) { week = 9999; break; }
+        }
+        week++;
+      }
+    } else if (freq === 'MONTHLY') {
+      var base = ev.start;
+      for (i = 0; i < max; i++) {
+        if (count !== null && out.length >= count) break;
+        var cand2 = new Date(base.getFullYear(), base.getMonth() + i * interval,
+                            base.getDate(), base.getHours(), base.getMinutes(), base.getSeconds());
+        if (cand2.getMonth() !== (base.getMonth() + i * interval) % 12) continue; // skip short months
+        if (!push(cand2)) break;
+      }
+    } else {
+      // Unsupported rule — count the single start instance.
+      push(new Date(ev.start.getTime()));
+    }
+
+    if (out.length > 1) stats.recur += out.length - 1;
+    return out;
+  }
+
+  /* ------------------------------------------------------------------
+     Sample data — a realistic June 2025 rota
+  ------------------------------------------------------------------ */
+  function sampleIcs() {
+    var events = [
+      ['20250602T090000', '20250602T170000', 'Front desk'],
+      ['20250603T090000', '20250603T170000', 'Front desk'],
+      ['20250604T120000', '20250604T200000', 'Late cover'],
+      ['20250605T090000', '20250605T170000', 'Front desk'],
+      ['20250606T090000', '20250606T130000', 'Half day'],
+      ['20250609T090000', '20250609T170000', 'Front desk'],
+      ['20250610T090000', '20250610T170000', 'Front desk'],
+      ['20250611T090000', '20250611T170000', 'Front desk'],
+      ['20250612T120000', '20250612T200000', 'Late cover'],
+      ['20250613T090000', '20250613T170000', 'Front desk'],
+      ['20250616T090000', '20250616T170000', 'Front desk'],
+      ['20250617T090000', '20250617T170000', 'Front desk'],
+      ['20250618T090000', '20250618T170000', 'Front desk'],
+      ['20250619T090000', '20250619T170000', 'Front desk'],
+      ['20250620T090000', '20250620T130000', 'Half day'],
+      ['20250623T090000', '20250623T170000', 'Front desk'],
+      ['20250624T120000', '20250624T200000', 'Late cover'],
+      ['20250625T090000', '20250625T170000', 'Front desk'],
+      ['20250626T090000', '20250626T170000', 'Front desk'],
+      ['20250627T090000', '20250627T160000', 'Front desk']
+    ];
+
+    var out = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Shift Hours//Sample//EN',
+      'CALSCALE:GREGORIAN'
+    ];
+
+    for (var i = 0; i < events.length; i++) {
+      out.push('BEGIN:VEVENT');
+      out.push('UID:sample-' + i + '@shift-hours');
+      out.push('DTSTAMP:20250501T000000Z');
+      out.push('DTSTART:' + events[i][0]);
+      out.push('DTEND:' + events[i][1]);
+      out.push('SUMMARY:' + events[i][2]);
+      out.push('END:VEVENT');
+    }
+    out.push('END:VCALENDAR');
+    return out.join('\r\n');
+  }
+
+  /* ------------------------------------------------------------------
+     Calculation
+  ------------------------------------------------------------------ */
+  function computeShifts(events, month) {
+    var parts = month.split('-');
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10) - 1;
+
+    var result = [];
+    var outside = 0;
+    for (var i = 0; i < events.length; i++) {
+      var ev = events[i];
+      if (!ev.start || !ev.end) continue;
+      if (ev.start.getFullYear() !== y || ev.start.getMonth() !== m) { outside++; continue; }
+
+      var hours = (ev.end.getTime() - ev.start.getTime()) / 3600000;
+      if (hours <= 0) continue;
+
+      result.push({
+        date: ev.start,
+        title: ev.title || 'Shift',
+        start: ev.start,
+        end: ev.end,
+        hours: hours,
+        excluded: false
+      });
+    }
+
+    result.sort(function (a, b) { return a.start - b.start; });
+    result.outside = outside;
+    return result;
+  }
+
+  function weekKey(d) {
+    // ISO-ish week starting Monday
+    var t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var day = (t.getDay() + 6) % 7; // Mon = 0
+    t.setDate(t.getDate() - day);
+    return fmtDate(t);
+  }
+
+  function daysInMonth(ym) {
+    if (!ym) return 0;
+    var parts = ym.split('-');
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    if (isNaN(y) || isNaN(m) || m < 1 || m > 12) return 0;
+    return new Date(y, m, 0).getDate();
+  }
+
+  function summarize(shifts, month) {
+    var total = 0;
+    var longest = null;
+
+    for (var i = 0; i < shifts.length; i++) {
+      if (shifts[i].excluded) continue;
+      total += shifts[i].hours;
+      if (!longest || shifts[i].hours > longest.hours) longest = shifts[i];
+    }
+
+    // Weeks: distinct Monday keys touched by the counted shifts, but at least 1
+    var weekMap = {};
+    for (var j = 0; j < shifts.length; j++) {
+      if (shifts[j].excluded) continue;
+      var k = weekKey(shifts[j].date);
+      weekMap[k] = (weekMap[k] || 0) + shifts[j].hours;
+    }
+
+    var weekKeys = Object.keys(weekMap).sort();
+    var weekCount = weekKeys.length;
+
+    // Average per week: total hours spread across the days of the selected
+    // month, scaled up to a seven-day week.
+    var dim = daysInMonth(month);
+    var avg = dim > 0 ? (total / dim) * 7 : 0;
+
+    return {
+      total: total,
+      avg: avg,
+      longest: longest,
+      weekCount: weekCount,
+      weekMap: weekMap,
+      weekKeys: weekKeys
+    };
+  }
+
+  /* ------------------------------------------------------------------
+     Render
+  ------------------------------------------------------------------ */
+  function render() {
+    var shifts = state.shifts;
+    var summary = summarize(shifts, state.month);
+
+    var counted = 0;
+    var excluded = 0;
+    for (var c = 0; c < shifts.length; c++) {
+      if (shifts[c].excluded) excluded++; else counted++;
+    }
+
+    // Period tag
+    periodTag.textContent = state.month ? fmtMonthLabel(state.month) : '—';
+
+    // Stats
+    totalHoursEl.innerHTML = round1(summary.total).toFixed(1) + '<span class="unit">h</span>';
+    avgHoursEl.innerHTML   = round1(summary.avg).toFixed(1)   + '<span class="unit">h</span>';
+    shiftCountEl.textContent = counted + (counted === 1 ? ' shift' : ' shifts') +
+      (excluded > 0 ? ' · ' + excluded + ' excluded' : '');
+    var dim = daysInMonth(state.month);
+    weekCountEl.textContent  = dim > 0
+      ? 'over ' + dim + ' days'
+      : summary.weekCount + (summary.weekCount === 1 ? ' week' : ' weeks');
+
+    if (summary.longest) {
+      longestEl.innerHTML = round1(summary.longest.hours).toFixed(1) + '<span class="unit">h</span>';
+      longestDateEl.textContent = fmtDate(summary.longest.date);
+    } else {
+      longestEl.innerHTML = '0.0<span class="unit">h</span>';
+      longestDateEl.textContent = '—';
+    }
+
+    tableCount.textContent = shifts.length + (shifts.length === 1 ? ' entry' : ' entries');
+
+    // Table
+    if (shifts.length === 0) {
+      shiftBody.innerHTML =
+        '<tr><td colspan="6" class="empty">No shifts loaded yet. Enter a Vcal URL and press Calculate hours.</td></tr>';
+    } else {
+      var rows = '';
+      for (var i = 0; i < shifts.length; i++) {
+        var s = shifts[i];
+        var actions = '';
+        if (s.excluded) {
+          actions = '<button type="button" class="row-restore" data-index="' + i + '">Restore</button>';
+        } else {
+          actions = '<button type="button" class="row-remove" data-index="' + i + '">Remove</button>';
+        }
+        var editing = state.editing && state.editing.index === i ? state.editing.field : null;
+        var editable = !s.excluded;
+        rows += '<tr' + (s.excluded ? ' class="removed"' : '') + '>' +
+          '<td>' + fmtDate(s.date) + '</td>' +
+          '<td><span class="shift-title">' + escapeHtml(s.title) + '</span>' +
+            (s.edited ? '<span class="edited-tag">edited</span>' : '') + '</td>' +
+          '<td class="num">' + cellHtml(i, 'start', fmtTime(s.start), editing, editable) + '</td>' +
+          '<td class="num">' + cellHtml(i, 'end', endDisplay(s), editing, editable) + '</td>' +
+          '<td class="num">' + cellHtml(i, 'hours', round1(s.hours).toFixed(1), editing, editable) + '</td>' +
+          '<td><span class="row-actions">' + actions + '</span></td>' +
+        '</tr>';
+      }
+      shiftBody.innerHTML = rows;
+    }
+
+    // Excluded note
+    if (excluded > 0) {
+      excludedNote.className = 'excluded-note show';
+      excludedNote.innerHTML = excluded + (excluded === 1 ? ' shift is' : ' shifts are') +
+        ' excluded from the totals. <button type="button" id="restoreAllBtn">Restore all</button>';
+    } else {
+      excludedNote.className = 'excluded-note';
+      excludedNote.innerHTML = '';
+    }
+
+    // Weekly bars
+    if (summary.weekCount === 0) {
+      weekBars.innerHTML = '<p class="hint" style="margin:0;">Weekly breakdown appears after a calculation.</p>';
+    } else {
+      var maxWeek = 0;
+      for (var w = 0; w < summary.weekKeys.length; w++) {
+        var hv = summary.weekMap[summary.weekKeys[w]];
+        if (hv > maxWeek) maxWeek = hv;
+      }
+      var bars = '';
+      for (var q = 0; q < summary.weekKeys.length; q++) {
+        var key = summary.weekKeys[q];
+        var val = summary.weekMap[key];
+        var pct = maxWeek > 0 ? Math.max(2, Math.round((val / maxWeek) * 100)) : 0;
+        bars += '<div class="week-row">' +
+          '<span class="wk-label">' + key + '</span>' +
+          '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
+          '<span class="wk-val">' + round1(val).toFixed(1) + ' h</span>' +
+        '</div>';
+      }
+      weekBars.innerHTML = bars;
+    }
+  }
+
+  // End time text, with a red '+1' marker when the shift runs past midnight
+  // into the following day.
+  function endDisplay(s) {
+    var text = fmtTime(s.end);
+    if (crossesMidnight(s)) {
+      text += '<sup class="time-plus-one" title="Ends the following day">+1</sup>';
+    }
+    return text;
+  }
+
+  // True when the end falls on a later calendar day than the start.
+  function crossesMidnight(s) {
+    if (!s || !s.start || !s.end) return false;
+    return fmtDate(s.end) !== fmtDate(s.start);
+  }
+
+  // One editable value in the table: a span that turns into a text box on
+  // click. Start and end are clock times, hours is a decimal number.
+  function cellHtml(index, field, display, editingField, editable) {
+    if (!editable) {
+      return '<span class="cell-edit-static">' + display + '</span>';
+    }
+    var isEditing = editingField === field;
+    var value = display;
+    if (isEditing) {
+      var s = state.shifts[index];
+      if (field === 'start') value = timeValue(s.start);
+      else if (field === 'end') value = timeValue(s.end);
+      else value = round1(s.hours).toFixed(2);
+    } else if (field === 'end') {
+      // The marker is markup, not part of the value, so it is only shown
+      // while the cell is closed.
+      value = display;
+    }
+    var hint = '';
+    if (isEditing) {
+      hint = field === 'hours'
+        ? '<span class="cell-hint">hours, e.g. 7.5</span>'
+        : '<span class="cell-hint">24-hour, e.g. 09:30</span>';
+    }
+    return '<span class="cell-edit' + (isEditing ? ' editing' : '') + '"' +
+      ' contenteditable="' + (isEditing ? 'true' : 'false') + '"' +
+      ' role="textbox" tabindex="0"' +
+      ' data-index="' + index + '" data-field="' + field + '"' +
+      ' aria-label="' + (field === 'hours' ? 'Hours' : (field === 'start' ? 'Start time' : 'End time')) +
+      ' for shift ' + (index + 1) + '">' + value + '</span>' + hint;
+  }
+
+  var EMPTY_STATS = { blocks: 0, noEnd: 0, allDay: 0, utc: 0, tzid: 0, cancelled: 0, recur: 0 };
+
+  function renderDiagnostics(events, shifts, month) {
+    if (!troublePanel) return;
+
+    var stats = (events && events.stats) || state.lastStats || EMPTY_STATS;
+    var usable = events && typeof events.length === 'number' ? events.length : 0;
+    var inMonth = shifts && typeof shifts.length === 'number' ? shifts.length : 0;
+    var outside = (shifts && shifts.outside) || 0;
+
+    if (diagEvents)   diagEvents.textContent   = stats.blocks || 0;
+    if (diagUsable)   diagUsable.textContent   = usable;
+    if (diagNoEnd)    diagNoEnd.textContent    = stats.noEnd || 0;
+    if (diagRecur)    diagRecur.textContent    = stats.recur || 0;
+    if (diagInMonth)  diagInMonth.textContent  = inMonth;
+    if (diagOutMonth) diagOutMonth.textContent = outside;
+
+    if (diagNoEnd)    diagNoEnd.className    = 'v' + ((stats.noEnd || 0) > 0 ? ' warn' : '');
+    if (diagOutMonth) diagOutMonth.className = 'v' + (outside > 0 ? ' warn' : '');
+
+    // Flag the checklist rows that actually apply to this feed.
+    var flags = {
+      month: outside > 0,
+      noend: (stats.noEnd || 0) > 0,
+      allday: (stats.allDay || 0) > 0,
+      tz: (stats.utc || 0) > 0 || (stats.tzid || 0) > 0,
+      fold: false,
+      cancel: (stats.cancelled || 0) > 0,
+      recur: (stats.recur || 0) > 0
+    };
+    var items = troubleList ? troubleList.querySelectorAll('li') : [];
+    for (var i = 0; i < items.length; i++) {
+      var key = items[i].getAttribute('data-check');
+      if (flags[key]) items[i].classList.add('flag');
+      else items[i].classList.remove('flag');
+    }
+
+    var bits = [];
+    if (!stats.blocks) {
+      bits.push('No VEVENT blocks were found at all — the pasted text may not be the calendar file.');
+    } else {
+      bits.push(stats.blocks + ' VEVENT block' + (stats.blocks === 1 ? '' : 's') +
+                ' read, ' + usable + ' with a usable start and end.');
+      if (stats.noEnd > 0) bits.push(stats.noEnd + ' had no usable DTEND and were skipped.');
+      if (outside > 0) bits.push(outside + ' fell outside ' + fmtMonthLabel(month) + '.');
+      if (stats.allDay > 0) bits.push(stats.allDay + ' were date-only (all-day) events and were ignored.');
+      if (stats.recur > 0) bits.push(stats.recur + ' extra occurrence' +
+        (stats.recur === 1 ? '' : 's') + ' came from repeating events.');
+      if (stats.utc > 0) bits.push(stats.utc + ' UTC time' + (stats.utc === 1 ? '' : 's') +
+        ' were converted to your local time zone.');
+      if (stats.tzid > 0) bits.push(stats.tzid + ' TZID time' + (stats.tzid === 1 ? '' : 's') +
+        ' were read as local time.');
+      if (stats.cancelled > 0) bits.push(stats.cancelled + ' were marked CANCELLED but are still counted.');
+    }
+    if (diagNote) diagNote.textContent = bits.join(' ');
+  }
+
+  // Re-read the current state and repaint the troubleshooting panel so its
+  // diagnostics and flagged rows always match the numbers on screen.
+  function refreshTrouble() {
+    var month = state.month || monthInput.value || '';
+    var shifts = state.shifts || [];
+    var counted = 0;
+    for (var i = 0; i < shifts.length; i++) {
+      if (!shifts[i].excluded) counted++;
+    }
+    var pseudo = { length: counted, outside: shifts.outside || 0 };
+    renderDiagnostics(state.lastEvents || { stats: state.lastStats || EMPTY_STATS }, pseudo, month);
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ------------------------------------------------------------------
+     Actions
+  ------------------------------------------------------------------ */
+  function runCalculation(icsText, sourceLabel) {
+    var month = monthInput.value;
+    if (!month) {
+      setStatus('Pick a month to calculate.', true);
+      return;
+    }
+
+    var events = parseIcs(icsText);
+    state.editing = null;
+    if (events.length === 0) {
+      state.shifts = [];
+      state.month = month;
+      state.source = sourceLabel;
+      state.lastEvents = events;
+      state.lastStats = events.stats || EMPTY_STATS;
+      render();
+      refreshTrouble();
+      setStatus('No events with a start and end date were found in the feed.', true);
+      return;
+    }
+
+    var shifts = computeShifts(events, month);
+    state.editing = null;
+    state.shifts = shifts;
+    state.month = month;
+    state.source = sourceLabel;
+    state.lastEvents = events;
+    state.lastStats = events.stats || EMPTY_STATS;
+    render();
+    refreshTrouble();
+
+    if (shifts.length === 0) {
+      setStatus('The feed loaded ' + events.length + ' events, but none fall inside ' +
+                fmtMonthLabel(month) + '. Try another month.', true);
+    } else {
+      var extra = '';
+      if (shifts.outside > 0) extra += ' ' + shifts.outside + ' event' +
+        (shifts.outside === 1 ? '' : 's') + ' fell outside the month.';
+      if (events.stats && events.stats.noEnd > 0) extra += ' ' + events.stats.noEnd +
+        ' had no end time and were skipped.';
+      setStatus('Loaded ' + shifts.length + ' shift' + (shifts.length === 1 ? '' : 's') +
+                ' for ' + fmtMonthLabel(month) + ' from ' + sourceLabel + '.' + extra);
+    }
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    // Pasted .ics contents take priority over the URL field.
+    var pasted = pasteInput ? pasteInput.value.trim() : '';
+    if (pasted) {
+      if (!/BEGIN:VCALENDAR/i.test(pasted)) {
+        setStatus('The pasted text doesn\u2019t contain a VCALENDAR block.', true);
+        return;
+      }
+      runCalculation(pasted, 'the pasted feed');
+      return;
+    }
+
+    var url = urlInput.value.trim();
+    if (!url) {
+      setStatus('Enter a Vcal URL, or paste .ics contents, or press Load sample shift data.', true);
+      return;
+    }
+
+    // A static page cannot fetch an arbitrary remote feed, so we make the
+    // limitation explicit rather than pretending the request succeeded.
+    if (/^https?:\/\//i.test(url)) {
+      setStatus(
+        'This page can\u2019t reach a remote URL from a published static file. ' +
+        'Paste the .ics contents into the box below, or press Load sample shift data.',
+        true
+      );
+      showUrlNote(url);
+      showPasteBox();
+      return;
+    }
+
+    // Treat anything that looks like calendar data as pasted content.
+    if (/BEGIN:VCALENDAR/i.test(url)) {
+      runCalculation(url, 'the pasted feed');
+      return;
+    }
+
+    setStatus('That doesn\u2019t look like an iCalendar feed. Paste text beginning with BEGIN:VCALENDAR.', true);
+  }
+
+  function showUrlNote(url) {
+    urlNoteUrl.textContent = url;
+    urlNoteOpen.setAttribute('href', url);
+    urlNote.classList.add('show');
+  }
+
+  function showPasteBox() {
+    if (pasteInput) pasteInput.focus();
+  }
+
+  function handleDemo() {
+    if (pasteInput) pasteInput.value = '';
+    urlInput.value = 'https://example.com/rota.ics';
+    monthInput.value = '2025-06';
+    runCalculation(sampleIcs(), 'the sample rota');
+  }
+
+  function handleClear() {
+    state.shifts = [];
+    state.month = '';
+    state.source = '';
+    state.lastEvents = null;
+    state.lastStats = null;
+    state.editing = null;
+    if (pasteInput) pasteInput.value = '';
+    monthInput.value = lastMonthValue();
+    render();
+    refreshTrouble();
+    setStatus('');
+    urlNote.classList.remove('show');
+  }
+
+  // Click a value to edit it in place.
+  function startEdit(index, field) {
+    if (index < 0 || index >= state.shifts.length) return;
+    if (state.shifts[index].excluded) return;
+    state.editing = { index: index, field: field };
+    render();
+    var el = shiftBody.querySelector('.cell-edit.editing');
+    if (el) focusCell(el);
+  }
+
+  function cancelEdit() {
+    if (!state.editing) return;
+    state.editing = null;
+    render();
+  }
+
+  function focusCell(el) {
+    if (!el) return;
+    el.focus();
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (err) { /* selection is a nicety, not required */ }
+  }
+
+  // Commit the value in the open cell. Returns true when it was accepted.
+  function commitEdit() {
+    if (!state.editing) return true;
+    var index = state.editing.index;
+    var field = state.editing.field;
+    if (index < 0 || index >= state.shifts.length) { state.editing = null; return true; }
+
+    var el = shiftBody.querySelector('.cell-edit.editing');
+    if (!el) { state.editing = null; return true; }
+
+    var s = state.shifts[index];
+    var raw = el.textContent;
+
+    if (field === 'start' || field === 'end') {
+      var hhmm = parseTimeText(raw);
+      if (!hhmm) { rejectCell(el, 'Use a 24-hour time such as 09:30.'); return false; }
+      var when = timeOnDay(s.date, hhmm);
+      if (!when) { rejectCell(el, 'Use a 24-hour time such as 09:30.'); return false; }
+
+      if (field === 'start') {
+        if (when.getTime() >= s.end.getTime()) {
+          rejectCell(el, 'The start must be before the end time.');
+          return false;
+        }
+        s.start = when;
+      } else {
+        if (when.getTime() <= s.start.getTime()) {
+          rejectCell(el, 'The end must be after the start time.');
+          return false;
+        }
+        s.end = when;
+      }
+      // Start or end changed: the hours follow from the two times.
+      s.hours = (s.end.getTime() - s.start.getTime()) / 3600000;
+    } else {
+      var typed = parseHoursText(raw);
+      if (typed === null || typed <= 0 || typed > 24) {
+        rejectCell(el, 'Enter hours between 0.25 and 24.');
+        return false;
+      }
+      // Hours changed: keep the start and move the end to match.
+      s.hours = typed;
+      s.end = new Date(s.start.getTime() + typed * 3600000);
+    }
+
+    s.edited = true;
+    state.editing = null;
+    render();
+    refreshTrouble();
+    setStatus('Shift on ' + fmtDate(s.date) + ' updated to ' + round1(s.hours).toFixed(1) +
+              ' hours (' + fmtTime(s.start) + '\u2013' + fmtTime(s.end) + ').');
+    return true;
+  }
+
+  function rejectCell(el, msg) {
+    el.classList.add('invalid');
+    var hint = el.parentNode ? el.parentNode.querySelector('.cell-hint') : null;
+    if (hint) {
+      hint.textContent = msg;
+      hint.className = 'cell-hint error';
+    }
+    focusCell(el);
+  }
+
+  function toggleShift(index, excluded) {
+    if (index < 0 || index >= state.shifts.length) return;
+    state.shifts[index].excluded = excluded;
+    if (state.editing && state.editing.index === index) state.editing = null;
+    render();
+    refreshTrouble();
+    var counted = 0;
+    for (var i = 0; i < state.shifts.length; i++) {
+      if (!state.shifts[i].excluded) counted++;
+    }
+    setStatus(counted + ' of ' + state.shifts.length + ' shift' +
+      (state.shifts.length === 1 ? '' : 's') + ' counted towards the summary.');
+  }
+
+  function restoreAll() {
+    for (var i = 0; i < state.shifts.length; i++) {
+      state.shifts[i].excluded = false;
+    }
+    state.editing = null;
+    render();
+    refreshTrouble();
+    setStatus('All shifts restored.');
+  }
+
+  /* ------------------------------------------------------------------
+     Init
+  ------------------------------------------------------------------ */
+  form.addEventListener('submit', handleSubmit);
+  demoBtn.addEventListener('click', handleDemo);
+  clearBtn.addEventListener('click', handleClear);
+
+  shiftBody.addEventListener('click', function (e) {
+    var target = e.target;
+    if (!target) return;
+
+    if (target.classList.contains('cell-edit')) {
+      var ci = parseInt(target.getAttribute('data-index'), 10);
+      var cf = target.getAttribute('data-field');
+      if (isNaN(ci) || !cf) return;
+      if (state.editing && (state.editing.index !== ci || state.editing.field !== cf)) {
+        if (!commitEdit()) return;
+      }
+      if (!state.editing) startEdit(ci, cf);
+      return;
+    }
+
+    if (target.tagName !== 'BUTTON') return;
+    var idx = parseInt(target.getAttribute('data-index'), 10);
+    if (isNaN(idx)) return;
+    if (target.classList.contains('row-remove')) {
+      toggleShift(idx, true);
+    } else if (target.classList.contains('row-restore')) {
+      toggleShift(idx, false);
+    }
+  });
+
+  // Enter commits the open cell, Escape abandons it, Tab moves to the next
+  // editable value in the row.
+  shiftBody.addEventListener('keydown', function (e) {
+    if (!state.editing) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      var index = state.editing.index;
+      var field = state.editing.field;
+      if (!commitEdit()) return;
+      var order = ['start', 'end', 'hours'];
+      var pos = order.indexOf(field);
+      var next = e.shiftKey ? pos - 1 : pos + 1;
+      if (next < 0) next = order.length - 1;
+      if (next >= order.length) next = 0;
+      startEdit(index, order[next]);
+    }
+  });
+
+  // Clicking anywhere else commits the open cell.
+  document.addEventListener('click', function (e) {
+    if (!state.editing) return;
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('cell-edit')) return;
+    commitEdit();
+  });
+
+  excludedNote.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'restoreAllBtn') restoreAll();
+  });
+
+  urlInput.addEventListener('input', function () {
+    if (statusEl.classList.contains('error')) setStatus('');
+  });
+
+  if (pasteInput) {
+    pasteInput.addEventListener('input', function () {
+      if (statusEl.classList.contains('error')) setStatus('');
+    });
+  }
+
+  urlNoteClose.addEventListener('click', function () {
+    urlNote.classList.remove('show');
+  });
+
+  // Troubleshooting panel: expand / collapse on the arrow button.
+  var troubleToggle = document.querySelector('.trouble-toggle');
+  if (troubleToggle) {
+    troubleToggle.addEventListener('click', function () {
+      var open = troubleToggle.getAttribute('aria-expanded') === 'true';
+      troubleToggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+    });
+  }
+
+  monthInput.addEventListener('change', function () {
+    state.editing = null;
+    if (state.shifts.length > 0 || state.month) {
+      // Re-run against whatever source produced the current numbers.
+      if (state.source === 'the sample rota') {
+        runCalculation(sampleIcs(), 'the sample rota');
+      } else if (state.source === 'the pasted feed') {
+        var ta = pasteInput || document.getElementById('icsPaste');
+        if (ta && /BEGIN:VCALENDAR/i.test(ta.value)) {
+          runCalculation(ta.value, 'the pasted feed');
+        }
+      }
+    }
+    // Keep the panel in step even when there is nothing to re-run.
+    refreshTrouble();
+  });
+
+  // Sidebar active-link highlighting
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.rail-nav a'));
+  navLinks.forEach(function (link) {
+    link.addEventListener('click', function () {
+      navLinks.forEach(function (l) { l.classList.remove('active'); });
+      link.classList.add('active');
+    });
+  });
+
+  document.getElementById('navInput').addEventListener('click', function () {
+    var u = urlInput.value.trim();
+    if (u && /^https?:\/\//i.test(u)) {
+      showUrlNote(u);
+    }
+  });
+
+  // Sidebar link to the troubleshooting panel
+  var navTrouble = document.createElement('a');
+  navTrouble.href = '#trouble';
+  navTrouble.textContent = 'Troubleshoot';
+  navTrouble.id = 'navTrouble';
+  document.querySelector('.rail-nav').appendChild(navTrouble);
+  navTrouble.addEventListener('click', function () {
+    navLinks.forEach(function (l) { l.classList.remove('active'); });
+    navTrouble.classList.add('active');
+  });
+
+  // Default the month picker to last month.
+  monthInput.value = lastMonthValue();
+
+  render();
+  refreshTrouble();
+})();
+</script>
+
+<!--EDITMODE-BEGIN{"tweaks":[
+{"var":"--vd-primary","label":"Primary","type":"color"},
+{"var":"--vd-secondary","label":"Secondary","type":"color"},
+{"var":"--vd-surface","label":"Surface","type":"color"},
+{"var":"--vd-text","label":"Text","type":"color"},
+{"var":"--vd-space","label":"Spacing","type":"px","min":8,"max":96},
+{"var":"--vd-radius","label":"Corner radius","type":"px","min":0,"max":48},
+{"var":"--vd-heading","label":"Heading size","type":"px","min":20,"max":96},
+{"var":"--vd-lh","label":"Line height","type":"number","min":1,"max":2}
+]}EDITMODE-END-->
+
+</body></html>
